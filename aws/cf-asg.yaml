@@ -1,0 +1,39 @@
+Description: "CF Template for Terraform built ASG"
+Parameters:
+  LaunchTemplateId:
+    Type: String
+  LaunchTemplateVersion:
+    Type: String
+  LoadBalancerNames:
+    Type: CommaDelimitedList
+  MinSize:
+    Type: String
+  MaxSize:
+    Type: String
+  Name:
+    Type: String
+  VPCZoneId:
+    Type: CommaDelimitedList
+Resources:
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      Cooldown: 60
+      DesiredCapacity: { Ref: MinSize }
+      HealthCheckGracePeriod: 300
+      LaunchTemplate:
+        LaunchTemplateId: { Ref: LaunchTemplateId }
+        Version: { Ref: LaunchTemplateVersion }
+      LoadBalancerNames: { Ref: LoadBalancerNames }
+      MaxSize: { Ref: MaxSize }
+      MinSize: { Ref: MinSize }
+      Tags:
+      - Key: Name
+        Value: { Ref: Name }
+        PropagateAtLaunch: true
+      VPCZoneIdentifier: { Ref: VPCZoneId }
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 0
+        MaxBatchSize: 1
+        PauseTime: PT30S

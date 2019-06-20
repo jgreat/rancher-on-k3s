@@ -1,0 +1,12 @@
+apiVersion: k3s.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: nginx-ingress
+  namespace: kube-system
+spec:
+  chart: stable/nginx-ingress
+  targetNamespace: nginx-ingress
+  valuesContent: |
+    controller:
+      publishService:
+        enabled: true

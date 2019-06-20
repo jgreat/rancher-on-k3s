@@ -7,3 +7,8 @@
 
 # .tfvars files
 *.tfvars
+
+outputs/
+backups-*
+kube_config_cluster.yml
+kubeconfig.*

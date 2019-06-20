@@ -1,0 +1,52 @@
+#cloud-config
+apt:
+  sources:
+    docker:
+      source: "deb [arch=amd64] https://download.docker.com/linux/ubuntu $RELEASE stable"
+      keyid: 0EBFCD88
+packages:
+- docker-ce
+write_files:
+- path: /var/lib/rancher/k3s-container.sh
+  owner: root:root
+  permissions: '0700'
+  content: |
+    docker run -d --name k3s-server --privileged --restart=unless-stopped \
+      -e K3S_CLUSTER_SECRET='${cluster_secret}' \
+      -e K3S_KUBECONFIG_OUTPUT=/var/lib/rancher/k3s/kubeconfig.yaml \
+      -e K3S_KUBECONFIG_MODE='600' \
+      -v /var/lib/rancher/k3s:/var/lib/rancher/k3s \
+      -v /var/log/pods:/var/log/pods \
+      -v /var/log/containers:/var/log/containers \
+      --tmpfs /var/run \
+      --tmpfs /run \
+      --net=host \
+      rancher/k3s:v0.5.0 server --no-deploy traefik
+- path: /var/lib/rancher/k3s/server/manifests/crd-cert-manager.yaml
+  owner: root:root
+  permissions: '0600'
+  encoding: gzip
+  content: !!binary |
+    ${crd_cert_manager}
+- path: /var/lib/rancher/k3s/server/manifests/helm-cert-manager.yaml
+  owner: root:root
+  permissions: '0600'
+  encoding: gzip
+  content: !!binary |
+    ${helm_cert_manager}
+- path: /var/lib/rancher/k3s/server/manifests/helm-nginx-ingress.yaml
+  owner: root:root
+  permissions: '0600'
+  encoding: gzip
+  content: !!binary |
+    ${helm_nginx_ingress}
+- path: /var/lib/rancher/k3s/server/manifests/helm-rancher.yaml
+  owner: root:root
+  permissions: '0600'
+  encoding: gzip
+  content: !!binary |
+    ${helm_rancher}
+runcmd:
+- usermod -G docker -a ubuntu
+- return=1; while [ $return != 0 ]; do sleep 2; docker ps; return=$?; done
+- /var/lib/rancher/k3s-container.sh
